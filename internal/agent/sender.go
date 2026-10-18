@@ -5,10 +5,10 @@ import (
 	"net/http"
 )
 
-func SendGauge(client *http.Client, serverUrl string, name string, value float64) error {
+func SendGauge(client *http.Client, serverURL string, name string, value float64) error {
 	requestURL := fmt.Sprintf(
 		"%s/update/gauge/%s/%g",
-		serverUrl,
+		serverURL,
 		name,
 		value,
 	)
@@ -22,7 +22,7 @@ func SendGauge(client *http.Client, serverUrl string, name string, value float64
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Server returned %s", resp.Status)
+		return fmt.Errorf("server returned %s", resp.Status)
 	}
 
 	fmt.Println("gauge", resp.Status)
@@ -30,10 +30,10 @@ func SendGauge(client *http.Client, serverUrl string, name string, value float64
 	return nil
 }
 
-func SendCounter(client *http.Client, serverUrl string, name string, value int64) error {
+func SendCounter(client *http.Client, serverURL string, name string, value int64) error {
 	requestURL := fmt.Sprintf(
 		"%s/update/counter/%s/%d",
-		serverUrl,
+		serverURL,
 		name,
 		value,
 	)
@@ -47,7 +47,7 @@ func SendCounter(client *http.Client, serverUrl string, name string, value int64
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Server returned %s", resp.Status)
+		return fmt.Errorf("server returned %s", resp.Status)
 	}
 
 	fmt.Println("counter", resp.Status)

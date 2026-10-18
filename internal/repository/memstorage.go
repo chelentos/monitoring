@@ -11,3 +11,11 @@ func InitMemStorage() *MemStorage {
 		counters: make(map[string]int64),
 	}
 }
+
+func (s *MemStorage) SetGauge(name string, value float64) {
+	s.gauges[name] = value
+}
+
+func (s *MemStorage) AddCounter(name string, value int64) {
+	s.counters[name] += value
+}

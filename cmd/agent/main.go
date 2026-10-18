@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/chelentos/monitoring/internal/agent"
+	"github.com/go-resty/resty/v2"
 )
 
 const (
@@ -14,7 +14,7 @@ const (
 )
 
 func main() {
-	client := &http.Client{}
+	client := resty.New()
 	serverURL := "http://localhost:8080"
 	counter := 0
 	pollTicker := time.NewTicker(pollInterval)

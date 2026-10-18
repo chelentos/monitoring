@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/go-resty/resty/v2"
 )
 
 func TestSendGauge(t *testing.T) {
@@ -32,7 +34,8 @@ func TestSendGauge(t *testing.T) {
 			}))
 			defer server.Close()
 
-			err := SendGauge(server.Client(), server.URL, "Alloc", 12.5)
+			client := resty.NewWithClient(server.Client())
+			err := SendGauge(client, server.URL, "Alloc", 12.5)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SendGauge() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -66,7 +69,8 @@ func TestSendCounter(t *testing.T) {
 			}))
 			defer server.Close()
 
-			err := SendCounter(server.Client(), server.URL, "PollCount", 3)
+			client := resty.NewWithClient(server.Client())
+			err := SendCounter(client, server.URL, "PollCount", 3)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SendCounter() error = %v, wantErr %v", err, tt.wantErr)
 			}

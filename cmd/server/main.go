@@ -4,13 +4,15 @@ import (
 	"net/http"
 
 	"github.com/chelentos/monitoring/internal/handler"
+	"github.com/go-chi/chi/v5"
 )
 
 func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("POST /update/{type}/{name}/{value}", handler.UpdateHandler)
+	r := chi.NewRouter()
 
-	err := http.ListenAndServe(`:8080`, mux)
+	r.Post("/update/{type}/{name}/{value}", handler.UpdateHandler)
+
+	err := http.ListenAndServe(`:8080`, r)
 
 	if err != nil {
 		panic(err)

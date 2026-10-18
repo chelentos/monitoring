@@ -3,54 +3,41 @@ package agent
 import (
 	"fmt"
 	"net/http"
+	"strconv"
+
+	"github.com/go-resty/resty/v2"
 )
 
-func SendGauge(client *http.Client, serverURL string, name string, value float64) error {
-	requestURL := fmt.Sprintf(
-		"%s/update/gauge/%s/%g",
-		serverURL,
-		name,
-		value,
-	)
-
-	resp, err := client.Post(requestURL, "text/plain", nil)
+func SendGauge(client *resty.Client, serverURL string, name string, value float64) error {
+	resp, err := client.R().SetPathParams(map[string]string{
+		"name":  name,
+		"value": strconv.FormatFloat(value, 'f', -1, 64),
+	}).SetHeader("Content-Type", "text/plain").Post(serverURL + "/update/gauge/{name}/{value}")
 
 	if err != nil {
 		return err
 	}
 
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("server returned %s", resp.Status)
+	if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("server returned %s", resp.Status())
 	}
-
-	fmt.Println("gauge", resp.Status)
 
 	return nil
 }
 
-func SendCounter(client *http.Client, serverURL string, name string, value int64) error {
-	requestURL := fmt.Sprintf(
-		"%s/update/counter/%s/%d",
-		serverURL,
-		name,
-		value,
-	)
-
-	resp, err := client.Post(requestURL, "text/plain", nil)
+func SendCounter(client *resty.Client, serverURL string, name string, value int64) error {
+	resp, err := client.R().SetPathParams(map[string]string{
+		"name":  name,
+		"value": strconv.FormatInt(value, 10),
+	}).SetHeader("Content-Type", "text/plain").Post(serverURL + "/update/counter/{name}/{value}")
 
 	if err != nil {
 		return err
 	}
 
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("server returned %s", resp.Status)
+	if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("server returned %s", resp.Status())
 	}
-
-	fmt.Println("counter", resp.Status)
 
 	return nil
 }

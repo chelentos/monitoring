@@ -15,6 +15,7 @@ func main() {
 
 	r.Post("/update/{type}/{name}/{value}", handler.UpdateMetricHandler(storage))
 	r.Get("/value/{type}/{name}", handler.GetMetricHandler(storage))
+	r.Get("/", handler.GetAllMetricHandler(storage))
 
 	err := http.ListenAndServe(`:8080`, r)
 

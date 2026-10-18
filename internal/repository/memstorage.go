@@ -1,5 +1,9 @@
 package repository
 
+import (
+	"maps"
+)
+
 type MemStorage struct {
 	gauges   map[string]float64
 	counters map[string]int64
@@ -17,6 +21,10 @@ func (s *MemStorage) GetGauge(name string) (float64, bool) {
 	return value, ok
 }
 
+func (s *MemStorage) GetGauges() map[string]float64 {
+	return maps.Clone(s.gauges)
+}
+
 func (s *MemStorage) SetGauge(name string, value float64) {
 	s.gauges[name] = value
 }
@@ -24,6 +32,10 @@ func (s *MemStorage) SetGauge(name string, value float64) {
 func (s *MemStorage) GetCounter(name string) (int64, bool) {
 	value, ok := s.counters[name]
 	return value, ok
+}
+
+func (s *MemStorage) GetCounters() map[string]int64 {
+	return maps.Clone(s.counters)
 }
 
 func (s *MemStorage) AddCounter(name string, value int64) {

@@ -64,14 +64,14 @@ func TestGetMetricHandler(t *testing.T) {
 			wantStatus: http.StatusMethodNotAllowed,
 		},
 		{
-			name: "unsupported content type", method: http.MethodGet,
+			name: "content type is ignored", method: http.MethodGet,
 			metricType: "gauge", metricName: "Alloc", contentType: "application/json",
-			wantStatus: http.StatusUnsupportedMediaType, wantBody: "Invalid type, expected text/plain\n",
+			wantStatus: http.StatusOK, wantBody: "12.5",
 		},
 		{
 			name: "missing content type", method: http.MethodGet,
 			metricType: "gauge", metricName: "Alloc",
-			wantStatus: http.StatusUnsupportedMediaType, wantBody: "Invalid type, expected text/plain\n",
+			wantStatus: http.StatusOK, wantBody: "12.5",
 		},
 		{
 			name: "content type with charset", method: http.MethodGet,

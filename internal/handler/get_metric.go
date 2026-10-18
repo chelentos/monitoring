@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"mime"
 	"net/http"
 	"strconv"
 
@@ -15,11 +14,13 @@ func GetMetricHandler(storage MetricsStorage) http.HandlerFunc {
 			return
 		}
 
-		mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
-		if err != nil || mediaType != "text/plain" {
-			http.Error(w, "Invalid type, expected text/plain", http.StatusUnsupportedMediaType)
-			return
-		}
+		/*
+			mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+			if err != nil || mediaType != "text/plain" {
+				http.Error(w, "Invalid type, expected text/plain", http.StatusUnsupportedMediaType)
+				return
+			}
+		*/
 
 		metricType := r.PathValue("type")
 
@@ -38,7 +39,7 @@ func GetMetricHandler(storage MetricsStorage) http.HandlerFunc {
 		if metricType == models.Gauge {
 			val, ok := storage.GetGauge(metricName)
 
-			if ok == false {
+			if !ok {
 				http.Error(w, "Gauge not found", http.StatusNotFound)
 				return
 			}
@@ -49,7 +50,7 @@ func GetMetricHandler(storage MetricsStorage) http.HandlerFunc {
 		} else {
 			val, ok := storage.GetCounter(metricName)
 
-			if ok == false {
+			if !ok {
 				http.Error(w, "Counter not found", http.StatusNotFound)
 				return
 			}

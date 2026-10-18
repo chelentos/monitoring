@@ -30,9 +30,12 @@ func TestUpdateMetricHandler(t *testing.T) {
 			wantBody: "Invalid counter value\n",
 		},
 		{
-			name: "unsupported content type", path: "/update/gauge/Alloc/12.5",
-			contentType: "application/json", wantStatus: http.StatusUnsupportedMediaType,
-			wantBody: "Invalid type, expected text/plain\n",
+			name: "content type is ignored", path: "/update/gauge/Alloc/12.5",
+			contentType: "application/json", wantStatus: http.StatusOK,
+		},
+		{
+			name: "missing content type", path: "/update/gauge/Alloc/12.5",
+			wantStatus: http.StatusOK,
 		},
 	}
 
@@ -42,7 +45,9 @@ func TestUpdateMetricHandler(t *testing.T) {
 			mux := http.NewServeMux()
 			mux.HandleFunc("POST /update/{type}/{name}/{value}", UpdateMetricHandler(storage))
 			req := httptest.NewRequest(http.MethodPost, tt.path, nil)
-			req.Header.Set("Content-Type", tt.contentType)
+			if tt.contentType != "" {
+				req.Header.Set("Content-Type", tt.contentType)
+			}
 			recorder := httptest.NewRecorder()
 
 			mux.ServeHTTP(recorder, req)

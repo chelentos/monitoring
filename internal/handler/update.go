@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"mime"
 	"net/http"
 	"strconv"
 
@@ -15,11 +14,13 @@ func UpdateMetricHandler(storage MetricsStorage) http.HandlerFunc {
 			return
 		}
 
-		mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
-		if err != nil || mediaType != "text/plain" {
-			http.Error(w, "Invalid type, expected text/plain", http.StatusUnsupportedMediaType)
-			return
-		}
+		/*
+			mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+			if err != nil || mediaType != "text/plain" {
+				http.Error(w, "Invalid type, expected text/plain", http.StatusUnsupportedMediaType)
+				return
+			}
+		*/
 
 		metricType := r.PathValue("type")
 

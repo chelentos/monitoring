@@ -4,9 +4,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/chelentos/monitoring/internal/repository"
 )
 
-func TestUpdateHandler(t *testing.T) {
+func TestUpdateMetricHandler(t *testing.T) {
 	tests := []struct {
 		name        string
 		path        string
@@ -36,8 +38,9 @@ func TestUpdateHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			storage := repository.InitMemStorage()
 			mux := http.NewServeMux()
-			mux.HandleFunc("POST /update/{type}/{name}/{value}", UpdateHandler)
+			mux.HandleFunc("POST /update/{type}/{name}/{value}", UpdateMetricHandler(storage))
 			req := httptest.NewRequest(http.MethodPost, tt.path, nil)
 			req.Header.Set("Content-Type", tt.contentType)
 			recorder := httptest.NewRecorder()

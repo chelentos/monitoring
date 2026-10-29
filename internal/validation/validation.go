@@ -28,7 +28,7 @@ func CheckAddr(addr string) error {
 	_, port, err := net.SplitHostPort(addr)
 
 	if err != nil {
-		return fmt.Errorf("Invalid addr %q: %w", addr, err)
+		return fmt.Errorf("invalid addr %q: %w", addr, err)
 	}
 
 	portNum, err := ParseInt(port, "port")

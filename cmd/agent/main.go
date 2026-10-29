@@ -8,17 +8,14 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-const (
-	pollInterval   = 2 * time.Second
-	reportInterval = 4 * time.Second
-)
-
 func main() {
+	parseAgentFlags()
+
 	client := resty.New()
-	serverURL := "http://localhost:8080"
+	serverURL := "http://" + flagRunAddr
 	counter := 0
-	pollTicker := time.NewTicker(pollInterval)
-	reportTicker := time.NewTicker(reportInterval)
+	pollTicker := time.NewTicker(time.Duration(flagPollInterval))
+	reportTicker := time.NewTicker(time.Duration(flagReportInterval))
 
 	defer pollTicker.Stop()
 	defer reportTicker.Stop()

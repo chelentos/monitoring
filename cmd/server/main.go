@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/chelentos/monitoring/internal/handler"
@@ -9,6 +10,13 @@ import (
 )
 
 func main() {
+	flagsErr := parseServerFlags()
+
+	if flagsErr != nil {
+		fmt.Println(flagsErr)
+		return
+	}
+
 	r := chi.NewRouter()
 
 	storage := repository.InitMemStorage()
@@ -17,7 +25,9 @@ func main() {
 	r.Get("/value/{type}/{name}", handler.GetMetricHandler(storage))
 	r.Get("/", handler.GetAllMetricHandler(storage))
 
-	err := http.ListenAndServe(`:8080`, r)
+	fmt.Println("Running server on", flagRunAddr)
+
+	err := http.ListenAndServe(flagRunAddr, r)
 
 	if err != nil {
 		panic(err)

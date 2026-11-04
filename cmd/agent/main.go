@@ -1,21 +1,27 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"os"
 	"time"
 
 	"github.com/chelentos/monitoring/internal/agent"
+	"github.com/chelentos/monitoring/internal/config"
 	"github.com/go-resty/resty/v2"
 )
 
 func main() {
-	parseAgentFlags()
+	cfg, err := config.ParseAgent(os.Args[1:])
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	client := resty.New()
-	serverURL := "http://" + flagRunAddr
+	serverURL := "http://" + cfg.Sender.Address
 	counter := 0
-	pollTicker := time.NewTicker(time.Duration(flagPollInterval))
-	reportTicker := time.NewTicker(time.Duration(flagReportInterval))
+	pollTicker := time.NewTicker(cfg.Collector.PollInterval)
+	reportTicker := time.NewTicker(cfg.Sender.ReportInterval)
 
 	defer pollTicker.Stop()
 	defer reportTicker.Stop()
@@ -31,13 +37,15 @@ func main() {
 			for name, value := range gauges {
 				err := agent.SendGauge(client, serverURL, name, value)
 				if err != nil {
-					fmt.Println(err)
+					log.Println(err)
 				}
 			}
 
 			err := agent.SendCounter(client, serverURL, "PollCount", int64(counter))
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
+			} else {
+				counter = 0
 			}
 		}
 	}

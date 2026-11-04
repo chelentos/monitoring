@@ -9,19 +9,6 @@ import (
 
 func GetMetricHandler(storage MetricsStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-
-		/*
-			mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
-			if err != nil || mediaType != "text/plain" {
-				http.Error(w, "Invalid type, expected text/plain", http.StatusUnsupportedMediaType)
-				return
-			}
-		*/
-
 		metricType := r.PathValue("type")
 
 		if metricType != models.Gauge && metricType != models.Counter {
@@ -45,7 +32,6 @@ func GetMetricHandler(storage MetricsStorage) http.HandlerFunc {
 			}
 
 			w.Write([]byte(strconv.FormatFloat(val, 'f', -1, 64)))
-			w.WriteHeader(http.StatusOK)
 			return
 		} else {
 			val, ok := storage.GetCounter(metricName)
@@ -56,7 +42,6 @@ func GetMetricHandler(storage MetricsStorage) http.HandlerFunc {
 			}
 
 			w.Write([]byte(strconv.FormatInt(val, 10)))
-			w.WriteHeader(http.StatusOK)
 			return
 		}
 	}

@@ -1,19 +1,20 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net/http"
+	"os"
 
+	"github.com/chelentos/monitoring/internal/config"
 	"github.com/chelentos/monitoring/internal/handler"
 	"github.com/chelentos/monitoring/internal/repository"
 	"github.com/go-chi/chi/v5"
 )
 
 func main() {
-	flagsErr := parseServerFlags()
-
-	if flagsErr != nil {
-		fmt.Println(flagsErr)
+	cfg, parseErr := config.ParseServer(os.Args[1:])
+	if parseErr != nil {
+		log.Println(parseErr)
 		return
 	}
 
@@ -25,11 +26,10 @@ func main() {
 	r.Get("/value/{type}/{name}", handler.GetMetricHandler(storage))
 	r.Get("/", handler.GetAllMetricHandler(storage))
 
-	fmt.Println("Running server on", flagRunAddr)
-
-	err := http.ListenAndServe(flagRunAddr, r)
+	log.Println("Running server on", cfg.Address)
+	err := http.ListenAndServe(cfg.Address, r)
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }

@@ -59,11 +59,6 @@ func TestGetMetricHandler(t *testing.T) {
 			wantStatus: http.StatusNotFound, wantBody: "Metric name requested\n",
 		},
 		{
-			name: "unsupported method", method: http.MethodPost,
-			metricType: "gauge", metricName: "Alloc", contentType: "text/plain",
-			wantStatus: http.StatusMethodNotAllowed,
-		},
-		{
 			name: "content type is ignored", method: http.MethodGet,
 			metricType: "gauge", metricName: "Alloc", contentType: "application/json",
 			wantStatus: http.StatusOK, wantBody: "12.5",

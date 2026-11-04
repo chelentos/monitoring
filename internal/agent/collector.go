@@ -1,6 +1,9 @@
 package agent
 
-import "runtime"
+import (
+	"math/rand"
+	"runtime"
+)
 
 func Collect() map[string]float64 {
 	var stats runtime.MemStats
@@ -34,5 +37,6 @@ func Collect() map[string]float64 {
 		"StackSys":      float64(stats.StackSys),
 		"Sys":           float64(stats.Sys),
 		"TotalAlloc":    float64(stats.TotalAlloc),
+		"RandomValue":   rand.Float64(),
 	}
 }

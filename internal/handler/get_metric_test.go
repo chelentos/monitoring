@@ -5,7 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/chelentos/monitoring/internal/repository"
+	"errors"
+	"fmt"
+	"github.com/chelentos/monitoring/internal/service"
 )
 
 func TestGetMetricHandler(t *testing.T) {
@@ -17,7 +19,18 @@ func TestGetMetricHandler(t *testing.T) {
 		contentType string
 		wantStatus  int
 		wantBody    string
+		readErr     error
 	}{
+		{
+			name: "service failure", method: http.MethodGet,
+			metricType: "gauge", metricName: "Alloc", readErr: errors.New("private failure"),
+			wantStatus: http.StatusInternalServerError, wantBody: "Internal server error\n",
+		},
+		{
+			name: "wrapped not found", method: http.MethodGet,
+			metricType: "counter", metricName: "PollCount", readErr: fmt.Errorf("lookup: %w", service.ErrMetricNotFound),
+			wantStatus: http.StatusNotFound, wantBody: "Counter not found\n",
+		},
 		{
 			name: "existing gauge", method: http.MethodGet,
 			metricType: "gauge", metricName: "Alloc", contentType: "text/plain",
@@ -77,11 +90,11 @@ func TestGetMetricHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			storage := repository.InitMemStorage()
-			storage.SetGauge("Alloc", 12.5)
-			storage.SetGauge("Zero", 0)
-			storage.AddCounter("PollCount", 3)
-			storage.AddCounter("Zero", 0)
+			reader := &serviceStub{
+				gauges:   map[string]float64{"Alloc": 12.5, "Zero": 0},
+				counters: map[string]int64{"PollCount": 3, "Zero": 0},
+				err:      tt.readErr,
+			}
 
 			req := httptest.NewRequest(tt.method, "/value/"+tt.metricType+"/"+tt.metricName, nil)
 			req.SetPathValue("type", tt.metricType)
@@ -91,7 +104,7 @@ func TestGetMetricHandler(t *testing.T) {
 			}
 			recorder := httptest.NewRecorder()
 
-			GetMetricHandler(storage).ServeHTTP(recorder, req)
+			GetMetricHandler(reader).ServeHTTP(recorder, req)
 
 			if recorder.Code != tt.wantStatus {
 				t.Errorf("status = %d, want %d", recorder.Code, tt.wantStatus)

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/chelentos/monitoring/internal/repository"
+	"github.com/chelentos/monitoring/internal/service"
 )
 
 func TestGetAllMetricHandler(t *testing.T) {
@@ -48,7 +49,7 @@ func TestGetAllMetricHandler(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, "/", nil)
 			response := httptest.NewRecorder()
 
-			GetAllMetricHandler(storage).ServeHTTP(response, request)
+			GetAllMetricHandler(service.NewMetricsService(storage)).ServeHTTP(response, request)
 
 			if response.Code != http.StatusOK {
 				t.Fatalf("status = %d, want %d", response.Code, http.StatusOK)
@@ -66,5 +67,22 @@ func TestGetAllMetricHandler(t *testing.T) {
 				t.Errorf("list item count = %d, want %d", got, len(tt.want))
 			}
 		})
+	}
+}
+
+func TestGetAllMetricHandlerWithReader(t *testing.T) {
+	reader := &serviceStub{
+		gauges:   map[string]float64{"Load<&>": 2.5},
+		counters: map[string]int64{"PollCount": 9007199254740993},
+	}
+	response := httptest.NewRecorder()
+	GetAllMetricHandler(reader).ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d", response.Code)
+	}
+	for _, item := range []string{"<li>Load&lt;&amp;&gt;: 2.5</li>", "<li>PollCount: 9007199254740993</li>"} {
+		if !strings.Contains(response.Body.String(), item) {
+			t.Errorf("missing item %q in %s", item, response.Body.String())
+		}
 	}
 }

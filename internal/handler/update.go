@@ -1,13 +1,15 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
 	models "github.com/chelentos/monitoring/internal/model"
+	"github.com/chelentos/monitoring/internal/service"
 )
 
-func UpdateMetricHandler(storage MetricsStorage) http.HandlerFunc {
+func UpdateMetricHandler(updater MetricsService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		metricType := r.PathValue("type")
 
@@ -23,6 +25,7 @@ func UpdateMetricHandler(storage MetricsStorage) http.HandlerFunc {
 			return
 		}
 
+		var updateErr error
 		if metricType == models.Gauge {
 			value, err := strconv.ParseFloat(r.PathValue("value"), 64)
 
@@ -31,8 +34,7 @@ func UpdateMetricHandler(storage MetricsStorage) http.HandlerFunc {
 				return
 			}
 
-			storage.SetGauge(metricName, value)
-			return
+			updateErr = updater.UpdateGauge(metricName, value)
 		} else {
 			value, err := strconv.ParseInt(r.PathValue("value"), 10, 64)
 
@@ -41,8 +43,17 @@ func UpdateMetricHandler(storage MetricsStorage) http.HandlerFunc {
 				return
 			}
 
-			storage.AddCounter(metricName, value)
+			updateErr = updater.UpdateCounter(metricName, value)
+		}
+
+		if errors.Is(updateErr, service.ErrEmptyName) {
+			http.Error(w, "Metric name requested", http.StatusNotFound)
 			return
 		}
+		if updateErr != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
 	}
 }

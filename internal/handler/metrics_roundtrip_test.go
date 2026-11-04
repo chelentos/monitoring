@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/chelentos/monitoring/internal/repository"
+	"github.com/chelentos/monitoring/internal/service"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -30,8 +31,8 @@ func TestMetricRoundTrip(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			storage := repository.InitMemStorage()
 			router := chi.NewRouter()
-			router.Post("/update/{type}/{name}/{value}", UpdateMetricHandler(storage))
-			router.Get("/value/{type}/{name}", GetMetricHandler(storage))
+			router.Post("/update/{type}/{name}/{value}", UpdateMetricHandler(service.NewMetricsService(storage)))
+			router.Get("/value/{type}/{name}", GetMetricHandler(service.NewMetricsService(storage)))
 
 			for i, value := range tt.values {
 				update := httptest.NewRequest(http.MethodPost, "/update/"+tt.metricType+"/Metric/"+value, nil)

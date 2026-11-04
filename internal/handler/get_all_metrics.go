@@ -32,14 +32,14 @@ var metricsTemplate = template.Must(template.New("metrics").Parse(`
 </html>
 `))
 
-func GetAllMetricHandler(storage MetricsStorage) http.HandlerFunc {
+func GetAllMetricHandler(reader MetricsService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := struct {
 			Gauges   map[string]float64
 			Counters map[string]int64
 		}{
-			Gauges:   storage.GetGauges(),
-			Counters: storage.GetCounters(),
+			Gauges:   reader.GetGauges(),
+			Counters: reader.GetCounters(),
 		}
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")

@@ -14,6 +14,14 @@ type MetricsStorage interface {
 	AddCounter(name string, delta int64)
 }
 
+type MetricsService struct {
+	storage MetricsStorage
+}
+
+func NewMetricsService(storage MetricsStorage) *MetricsService {
+	return &MetricsService{storage: storage}
+}
+
 func (s *MetricsService) GetGauge(name string) (float64, error) {
 	if name == "" {
 		return 0, ErrEmptyName
@@ -42,14 +50,6 @@ func (s *MetricsService) GetGauges() map[string]float64 {
 
 func (s *MetricsService) GetCounters() map[string]int64 {
 	return s.storage.GetCounters()
-}
-
-type MetricsService struct {
-	storage MetricsStorage
-}
-
-func NewMetricsService(storage MetricsStorage) *MetricsService {
-	return &MetricsService{storage: storage}
 }
 
 func (s *MetricsService) UpdateGauge(name string, value float64) error {

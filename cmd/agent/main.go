@@ -13,7 +13,7 @@ import (
 func main() {
 	cfg, err := config.ParseAgent(os.Args[1:])
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 		return
 	}
 
@@ -37,13 +37,13 @@ func main() {
 			for name, value := range gauges {
 				err := agent.SendGauge(client, serverURL, name, value)
 				if err != nil {
-					log.Println(err)
+					log.Fatal(err)
 				}
 			}
 
 			err := agent.SendCounter(client, serverURL, "PollCount", int64(counter))
 			if err != nil {
-				log.Println(err)
+				log.Fatal(err)
 			} else {
 				counter = 0
 			}

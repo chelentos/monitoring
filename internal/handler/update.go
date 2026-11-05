@@ -9,7 +9,12 @@ import (
 	"github.com/chelentos/monitoring/internal/service"
 )
 
-func UpdateMetricHandler(updater MetricsService) http.HandlerFunc {
+type MetricsUpdateService interface {
+	UpdateGauge(name string, value float64) error
+	UpdateCounter(name string, delta int64) error
+}
+
+func UpdateMetricHandler(updater MetricsUpdateService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		metricType := r.PathValue("type")
 

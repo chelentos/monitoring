@@ -9,7 +9,12 @@ import (
 	"github.com/chelentos/monitoring/internal/service"
 )
 
-func GetMetricHandler(reader MetricsService) http.HandlerFunc {
+type MetricsGetService interface {
+	GetGauge(name string) (float64, error)
+	GetCounter(name string) (int64, error)
+}
+
+func GetMetricHandler(reader MetricsGetService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		metricType := r.PathValue("type")
 

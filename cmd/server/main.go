@@ -15,7 +15,7 @@ import (
 func main() {
 	cfg, parseErr := config.ParseServer(os.Args[1:])
 	if parseErr != nil {
-		log.Println(parseErr)
+		log.Fatal(parseErr)
 		return
 	}
 

@@ -10,13 +10,19 @@ import (
 	"github.com/chelentos/monitoring/internal/validation"
 )
 
-func validateAgentConfig(cfg AgentConfig) error {
-	addrErr := validation.CheckAddr(cfg.Sender.Address)
+type agentConfigValues struct {
+	Address       string `env:"ADDRESS"`
+	PollSeconds   int64  `env:"POLL_INTERVAL"`
+	ReportSeconds int64  `env:"REPORT_INTERVAL"`
+}
+
+func validateAgentConfig(cfg agentConfigValues) error {
+	addrErr := validation.CheckAddr(cfg.Address)
 	if addrErr != nil {
 		return addrErr
 	}
 
-	if !(cfg.Collector.PollInterval > 0 && cfg.Sender.ReportInterval > 0) {
+	if !(cfg.PollSeconds > 0 && cfg.ReportSeconds > 0) {
 		return fmt.Errorf(
 			"poll(-p) and report(-r) intervals mast be >0",
 		)
@@ -25,27 +31,23 @@ func validateAgentConfig(cfg AgentConfig) error {
 	return nil
 }
 
-func parseAgentCli(args []string) (AgentConfig, error) {
-	var cfg AgentConfig
-	var pollSeconds, reportSeconds int64
+func parseAgentCli(args []string) (agentConfigValues, error) {
+	var cfg agentConfigValues
 
 	fs := flag.NewFlagSet("agent", flag.ContinueOnError)
-	fs.StringVar(&cfg.Sender.Address, "a", "localhost:8080", "address and port of server")
-	fs.Int64Var(&reportSeconds, "r", 10, "report interval")
-	fs.Int64Var(&pollSeconds, "p", 2, "polling interval")
+	fs.StringVar(&cfg.Address, "a", "localhost:8080", "address and port of server")
+	fs.Int64Var(&cfg.ReportSeconds, "r", 10, "report interval")
+	fs.Int64Var(&cfg.PollSeconds, "p", 2, "polling interval")
 
 	parseErr := fs.Parse(args)
 	if parseErr != nil {
-		return AgentConfig{}, parseErr
+		return agentConfigValues{}, parseErr
 	}
-
-	cfg.Collector.PollInterval = time.Duration(pollSeconds) * time.Second
-	cfg.Sender.ReportInterval = time.Duration(reportSeconds) * time.Second
 
 	return cfg, nil
 }
 
-func parseAgentEnv(cfg AgentConfig, environ map[string]string) (AgentConfig, error) {
+func parseAgentEnv(cfg agentConfigValues, environ map[string]string) (agentConfigValues, error) {
 	if environ == nil {
 		environ = map[string]string{}
 	}
@@ -54,12 +56,12 @@ func parseAgentEnv(cfg AgentConfig, environ map[string]string) (AgentConfig, err
 		Environment: environ,
 	})
 	if err != nil {
-		return AgentConfig{}, err
+		return agentConfigValues{}, err
 	}
 
 	validationErr := validateAgentConfig(cfg)
 	if validationErr != nil {
-		return AgentConfig{}, validationErr
+		return agentConfigValues{}, validationErr
 	}
 
 	return cfg, nil
@@ -76,5 +78,18 @@ func ParseAgentConfig(args []string) (AgentConfig, error) {
 		return AgentConfig{}, errEnv
 	}
 
-	return envCfg, nil
+	err := validateAgentConfig(envCfg)
+	if err != nil {
+		return AgentConfig{}, err
+	}
+
+	return AgentConfig{
+		Collector: CollectorConfig{
+			PollInterval: time.Duration(envCfg.PollSeconds) * time.Second,
+		},
+		Sender: SenderConfig{
+			Address:        envCfg.Address,
+			ReportInterval: time.Duration(envCfg.ReportSeconds) * time.Second,
+		},
+	}, nil
 }

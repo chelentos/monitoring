@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	cfg, parseErr := config.ParseServer(os.Args[1:])
+	cfg, parseErr := config.ParseServerConfig(os.Args[1:])
 	if parseErr != nil {
 		log.Fatal(parseErr)
 		return

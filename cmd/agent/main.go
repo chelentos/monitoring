@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	cfg, err := config.ParseAgent(os.Args[1:])
+	cfg, err := config.ParseAgentConfig(os.Args[1:])
 	if err != nil {
 		log.Fatal(err)
 		return

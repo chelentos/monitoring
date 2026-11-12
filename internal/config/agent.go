@@ -3,12 +3,29 @@ package config
 import (
 	"flag"
 	"fmt"
+	"os"
 	"time"
 
+	"github.com/caarlos0/env/v11"
 	"github.com/chelentos/monitoring/internal/validation"
 )
 
-func ParseAgent(args []string) (AgentConfig, error) {
+func validateAgentConfig(cfg AgentConfig) error {
+	addrErr := validation.CheckAddr(cfg.Sender.Address)
+	if addrErr != nil {
+		return addrErr
+	}
+
+	if !(cfg.Collector.PollInterval > 0 && cfg.Sender.ReportInterval > 0) {
+		return fmt.Errorf(
+			"poll(-p) and report(-r) intervals mast be >0",
+		)
+	}
+
+	return nil
+}
+
+func parseAgentCli(args []string) (AgentConfig, error) {
 	var cfg AgentConfig
 	var pollSeconds, reportSeconds int64
 
@@ -22,19 +39,42 @@ func ParseAgent(args []string) (AgentConfig, error) {
 		return AgentConfig{}, parseErr
 	}
 
-	addrErr := validation.CheckAddr(cfg.Sender.Address)
-	if addrErr != nil {
-		return AgentConfig{}, addrErr
-	}
-
-	if pollSeconds <= 0 || reportSeconds <= 0 {
-		return AgentConfig{}, fmt.Errorf(
-			"intervals -p и -r must be >0",
-		)
-	}
-
 	cfg.Collector.PollInterval = time.Duration(pollSeconds) * time.Second
 	cfg.Sender.ReportInterval = time.Duration(reportSeconds) * time.Second
 
 	return cfg, nil
+}
+
+func parseAgentEnv(cfg AgentConfig, environ map[string]string) (AgentConfig, error) {
+	if environ == nil {
+		environ = map[string]string{}
+	}
+
+	err := env.ParseWithOptions(&cfg, env.Options{
+		Environment: environ,
+	})
+	if err != nil {
+		return AgentConfig{}, err
+	}
+
+	validationErr := validateAgentConfig(cfg)
+	if validationErr != nil {
+		return AgentConfig{}, validationErr
+	}
+
+	return cfg, nil
+}
+
+func ParseAgentConfig(args []string) (AgentConfig, error) {
+	cliCfg, errCli := parseAgentCli(args)
+	if errCli != nil {
+		return AgentConfig{}, errCli
+	}
+
+	envCfg, errEnv := parseAgentEnv(cliCfg, env.ToMap(os.Environ()))
+	if errEnv != nil {
+		return AgentConfig{}, errEnv
+	}
+
+	return envCfg, nil
 }

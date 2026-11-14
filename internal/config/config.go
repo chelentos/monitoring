@@ -1,18 +1,20 @@
 package config
 
-import "time"
+import (
+	"time"
+)
 
 type ServerConfig struct {
-	Address string
+	Address string `env:"ADDRESS"`
 }
 
 type CollectorConfig struct {
-	PollInterval time.Duration
+	PollInterval time.Duration `env:"POLL_INTERVAL"`
 }
 
 type SenderConfig struct {
-	Address        string
-	ReportInterval time.Duration
+	Address        string        `env:"ADDRESS"`
+	ReportInterval time.Duration `env:"REPORT_INTERVAL"`
 }
 
 type AgentConfig struct {

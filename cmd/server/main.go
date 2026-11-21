@@ -36,6 +36,8 @@ func main() {
 
 	r.Use(middleware.WithLogger(logger))
 	r.Use(chimiddlware.StripSlashes)
+	r.Use(middleware.WithCompress)
+	r.Use(middleware.WithDecompress)
 
 	r.Post("/update/{type}/{name}/{value}", handler.UpdateMetricHandler(metricsService))
 	r.Post("/update", handler.UpdateMetricJSONHandler(metricsService))

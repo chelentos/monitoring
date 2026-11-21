@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -59,6 +61,74 @@ func UpdateMetricHandler(updater MetricsUpdateService) http.HandlerFunc {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
+
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func UpdateMetricJSONHandler(updater MetricsUpdateService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var data models.Metrics
+		var buf bytes.Buffer
+
+		_, err := buf.ReadFrom(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if err = json.Unmarshal(buf.Bytes(), &data); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if (data.MType == models.Counter && data.Delta == nil) ||
+			(data.MType == models.Gauge && data.Value == nil) {
+			http.Error(w, "No value or delta", http.StatusBadRequest)
+			return
+		}
+
+		var updateErr error
+		var resp []byte
+		var jsonErr error
+		switch data.MType {
+		case models.Gauge:
+			updateErr = updater.UpdateGauge(data.ID, *data.Value)
+
+			resp, jsonErr = json.Marshal(models.Metrics{
+				ID:    data.ID,
+				MType: data.MType,
+				Value: data.Value,
+			})
+		case models.Counter:
+			updateErr = updater.UpdateCounter(data.ID, *data.Delta)
+
+			resp, jsonErr = json.Marshal(models.Metrics{
+				ID:    data.ID,
+				MType: data.MType,
+				Delta: data.Delta,
+			})
+		default:
+			http.Error(w, "Unsupported metric type", http.StatusBadRequest)
+			return
+		}
+
+		if errors.Is(updateErr, service.ErrEmptyName) {
+			http.Error(w, "Metric name requested", http.StatusBadRequest)
+			return
+		}
+		if updateErr != nil {
+			http.Error(w, updateErr.Error(), http.StatusInternalServerError)
+			return
+		}
+		if jsonErr != nil {
+			http.Error(w, jsonErr.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(resp)
 	}
 }

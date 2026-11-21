@@ -11,6 +11,7 @@ import (
 	"github.com/chelentos/monitoring/internal/repository"
 	"github.com/chelentos/monitoring/internal/service"
 	"github.com/go-chi/chi/v5"
+	chimiddlware "github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 )
 
@@ -34,9 +35,12 @@ func main() {
 	metricsService := service.NewMetricsService(storage)
 
 	r.Use(middleware.WithLogger(logger))
+	r.Use(chimiddlware.StripSlashes)
 
 	r.Post("/update/{type}/{name}/{value}", handler.UpdateMetricHandler(metricsService))
+	r.Post("/update", handler.UpdateMetricJSONHandler(metricsService))
 	r.Get("/value/{type}/{name}", handler.GetMetricHandler(metricsService))
+	r.Post("/value", handler.GetMetricJSONHandler(metricsService))
 	r.Get("/", handler.GetAllMetricHandler(metricsService))
 
 	log.Println("Running server on", cfg.Address)

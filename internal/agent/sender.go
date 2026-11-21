@@ -3,16 +3,20 @@ package agent
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
+	models "github.com/chelentos/monitoring/internal/model"
 	"github.com/go-resty/resty/v2"
 )
 
 func SendGauge(client *resty.Client, serverURL string, name string, value float64) error {
-	resp, err := client.R().SetPathParams(map[string]string{
-		"name":  name,
-		"value": strconv.FormatFloat(value, 'f', -1, 64),
-	}).SetHeader("Content-Type", "text/plain").Post(serverURL + "/update/gauge/{name}/{value}")
+	resp, err := client.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(models.Metrics{
+			ID:    name,
+			MType: "gauge",
+			Value: &value,
+		}).
+		Post(serverURL + "/update")
 
 	if err != nil {
 		return err
@@ -26,10 +30,14 @@ func SendGauge(client *resty.Client, serverURL string, name string, value float6
 }
 
 func SendCounter(client *resty.Client, serverURL string, name string, value int64) error {
-	resp, err := client.R().SetPathParams(map[string]string{
-		"name":  name,
-		"value": strconv.FormatInt(value, 10),
-	}).SetHeader("Content-Type", "text/plain").Post(serverURL + "/update/counter/{name}/{value}")
+	resp, err := client.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(models.Metrics{
+			ID:    name,
+			MType: "counter",
+			Delta: &value,
+		}).
+		Post(serverURL + "/update")
 
 	if err != nil {
 		return err

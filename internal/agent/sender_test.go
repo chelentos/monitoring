@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -21,7 +22,18 @@ func metricServer(t *testing.T, wantBody map[string]any, statusCode int) *httpte
 			t.Errorf("Content-Type = %q, want application/json", got)
 		}
 
-		body, err := io.ReadAll(r.Body)
+		if got := r.Header.Get("Content-Encoding"); got != "gzip" {
+			t.Errorf("Content-Encoding = %q, want gzip", got)
+		}
+		reader, err := gzip.NewReader(r.Body)
+		if err != nil {
+			t.Errorf("open gzip request body: %v", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		defer reader.Close()
+
+		body, err := io.ReadAll(reader)
 		var got map[string]any
 		if err != nil {
 			t.Errorf("read request body: %v", err)

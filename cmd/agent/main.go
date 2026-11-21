@@ -37,13 +37,13 @@ func main() {
 			for name, value := range gauges {
 				err := agent.SendGauge(client, serverURL, name, value)
 				if err != nil {
-					log.Fatal(err)
+					log.Printf("%s %s:%f", err.Error(), name, value)
 				}
 			}
 
 			err := agent.SendCounter(client, serverURL, "PollCount", int64(counter))
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err.Error())
 			} else {
 				counter = 0
 			}
